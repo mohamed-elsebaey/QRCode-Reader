@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:qr_code_app/CustomModalCard.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 // QRCode Reader Widget
 
@@ -31,9 +30,16 @@ class _QRCodeWidgetState extends State<QRCodeWidget> {
   void _onQrViewCreated(QRViewController controller) {
     this.controller = controller;
     controller.scannedDataStream.listen((scanData) {
-      setState(() {
-        result = scanData.code!;
-      });
+      result = scanData.code!;
+      // when result is taken Navigate the screen
+      Navigator.pop(context);
+      // show Modal
+      showModalBottomSheet(
+        context: context,
+        builder: (context) {
+          return CustomModalCard(result: result);
+        },
+      );
     });
   }
 
@@ -48,60 +54,20 @@ class _QRCodeWidgetState extends State<QRCodeWidget> {
         children: [
           Expanded(
             flex: 5,
-
             // QrView the widget for Qr camera scan
-            child: QRView(
-              key: qrkey,
-              onQRViewCreated: _onQrViewCreated,
-            ),
-          ),
-          Expanded(
-            flex: 1,
-            child: Center(
-              child: Text(
-                'Scan Result: $result',
-                style: const TextStyle(
-                  fontSize: 18,
+            child: Card(
+              margin: EdgeInsets.symmetric(vertical: 100, horizontal: 30),
+              child: QRView(
+                key: qrkey,
+                onQRViewCreated: _onQrViewCreated,
+                // try the overlay "the camera"
+                overlay: QrScannerOverlayShape(
+                  borderColor: Colors.cyan,
+                  borderRadius: 12,
+                  borderLength: 36,
+                  // overlayColor: Colors.amber,
                 ),
               ),
-            ),
-          ),
-          Expanded(
-            flex: 1,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    if (result.isNotEmpty) {
-                      //Clipboard to copy the result data
-                      Clipboard.setData(
-                        ClipboardData(text: result),
-                      );
-                      //copied message under the screen
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            "تم النسخ إلى الحافظة",
-                            textDirection: TextDirection.rtl,
-                          ),
-                        ),
-                      );
-                    }
-                  },
-                  child: const Text("Copy"),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    if (result.isNotEmpty) {
-                      //convert the result to url and (launchUrl) open it in brouser
-                      final Uri _uri = Uri.parse(result);
-                      await launchUrl(_uri);
-                    }
-                  },
-                  child: const Text("Open"),
-                ),
-              ],
             ),
           ),
         ],
